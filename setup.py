@@ -1,7 +1,6 @@
 import codecs
 import os
 import re
-import numpy as np
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
