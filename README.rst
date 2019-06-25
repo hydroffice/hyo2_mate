@@ -9,6 +9,10 @@ Mate
     :target: https://travis-ci.com/hydroffice/hyo2_mate
     :alt: Travis-CI Status
 
+.. image:: https://coveralls.io/repos/github/hydroffice/hyo2_mate/badge.svg?branch=master
+    :target: https://coveralls.io/github/hydroffice/hyo2_mate?branch=master
+    :alt: coverall
+
 .. image:: https://api.codacy.com/project/badge/Grade/2e5cfbbfcc0b4efdaab2436e11fb0e76
     :target: https://www.codacy.com/app/hydroffice/hyo2_mate
     :alt: Codacy badge
