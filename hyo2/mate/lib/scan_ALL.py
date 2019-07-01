@@ -17,6 +17,9 @@ class ScanALL(Scan):
         self.reader.rewind()
 
         while self.reader.moreData():
+            # update progress
+            self.progress = 1 - self.reader.moreData() // self.file_size
+
             # read datagram header
             number_bytes, stx, datagram_type, \
                 em_model, record_data, record_time = \

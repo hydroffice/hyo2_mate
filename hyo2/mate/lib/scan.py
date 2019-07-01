@@ -9,6 +9,7 @@ class Scan:
     file_path = None
     file_size = None
     reader = None
+    progress = 0       # completed percentage (0 - 100)
     scan_result = {}
 
     default_info = {
