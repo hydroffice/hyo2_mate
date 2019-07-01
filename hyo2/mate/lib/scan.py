@@ -1,3 +1,4 @@
+import os
 import time
 from copy import *
 
@@ -6,13 +7,15 @@ class Scan:
     '''abstract class to scan a raw data file'''
 
     file_path = None
+    file_size = None
     reader = None
     scan_result = {}
 
     default_info = {
-        'recordCount': 0,
-        'missingRecords': 0,
         'byteCount': 0,
+        'recordCount': 0,
+        'pingCount': 0,
+        'missedPings': 0,
         'startTime': None,
         'stopTime': None,
         'other': None,
@@ -20,6 +23,7 @@ class Scan:
 
     def __init__(self, file_path):
         self.file_path = file_path
+        self.file_size = os.path.getsize(file_path)
 
     def _time_str(self, unix_time):
         '''return time string in ISO format'''
@@ -30,7 +34,19 @@ class Scan:
         scan data to extract basic information for each type of datagram
         and save to scan_result
         '''
-        return
+
+    def is_filename_changed(self):
+        '''
+        check if the filename is different from what recorded
+        in the datagram
+        '''
+
+    def bathymetry_availability(self):
+        '''
+        check the presence of all required datagrams for bathymetry processing
+        (I, R, D or X, A, n, P, h, F or f or N, G, U)
+        return: 'None'/'Partial'/'Full'
+        '''
 
     def get_datagram_info(self, datagram_type):
         '''return info about a specific type of datagrame'''
@@ -38,12 +54,35 @@ class Scan:
             return self.scan_result[datagram_type]
         return None
 
-    def is_record_missed(self, datagram_type=None):
+    def get_total_pings(self, datagram_type=None):
+        '''return the nuber of pings'''
         if datagram_type is not None:
             if datagram_type not in self.scan_result.keys():
-                return True
-            return self.scan_result[datagram_type]['missingRecords'] > 0
+                return 0
+            return self.scan_result[datagram_type]['pingCount']
+        total = 0
         for datagram_type in self.scan_result.keys():
-            if self.scan_result[datagram_type]['missingRecords'] > 0:
-                return True
-        return False
+            total += self.scan_result[datagram_type]['pingCount']
+        return total
+
+    def get_missed_pings(self, datagram_type=None):
+        '''return the nuber of missed pings'''
+        if datagram_type is not None:
+            if datagram_type not in self.scan_result.keys():
+                return 0
+            return self.scan_result[datagram_type]['missedPings']
+        total = 0
+        for datagram_type in self.scan_result.keys():
+            total += self.scan_result[datagram_type]['missedPings']
+        return total
+
+    def total_datagram_bytes(self):
+        '''return number of bytes of all datagrams'''
+        total_bytes = 0
+        for datagram_type in self.scan_result.keys():
+            total_bytes += self.scan_result[datagram_type]['byteCount']
+        return total_bytes
+
+    def is_size_matched(self):
+        '''check if number of bytes of all datagrams is equal to file size'''
+        return (self.total_datagram_bytes() == self.file_size)
