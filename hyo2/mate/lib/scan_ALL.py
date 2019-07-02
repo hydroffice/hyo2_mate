@@ -92,7 +92,7 @@ class ScanALL(Scan):
                 data = self._file_ptr.read(_data_len)
                 s = _data_unpack(data)
                 self.scan_result[dg_type]['other'] = s[-5:]
-            elif dg_type in ['D', 'X', 'F', 'f', 'N', 'S', 'Y', 'R']:
+            elif dg_type in ['D', 'X', 'F', 'f', 'N', 'S', 'Y', 'A']:
                 this_count = _counter
                 last_count = self.scan_result[dg_type]['_seqNo']
                 if last_count is None:
@@ -189,7 +189,7 @@ class ScanALL(Scan):
         (allow the difference <= 1%)
         return: True/False
         '''
-        for d_type in ['D', 'X', 'F', 'f', 'N', 'S', 'Y', 'R']:
+        for d_type in ['D', 'X', 'F', 'f', 'N', 'S', 'Y']:
             if d_type in self.scan_result.keys():
                 rec = self.scan_result[d_type]
                 if rec['pingCount'] == 0:
