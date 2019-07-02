@@ -28,6 +28,8 @@ class TestMateScanALL(unittest.TestCase):
         self.test.get_missed_pings('-')
         self.test.get_total_pings()
         self.test.get_missed_pings()
+        self.test.is_missing_pings_tolerable()
+        self.test.has_minimum_pings()
 
     def test_is_size_matched(self):
         self.test.is_size_matched()
