@@ -2,6 +2,12 @@ import os
 import time
 from copy import *
 
+A_NONE = 'None'
+A_PARTIAL = 'Partial'
+A_FULL = 'Full'
+A_FAIL = 'Fail'
+A_PASS = 'Pass'
+
 
 class Scan:
     '''abstract class to scan a raw data file'''
@@ -34,19 +40,6 @@ class Scan:
         '''
         scan data to extract basic information for each type of datagram
         and save to scan_result
-        '''
-
-    def is_filename_changed(self):
-        '''
-        check if the filename is different from what recorded
-        in the datagram
-        '''
-
-    def bathymetry_availability(self):
-        '''
-        check the presence of all required datagrams for bathymetry processing
-        (I, R, D or X, A, n, P, h, F or f or N, G, U)
-        return: 'None'/'Partial'/'Full'
         '''
 
     def get_datagram_info(self, datagram_type):

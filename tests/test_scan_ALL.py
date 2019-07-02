@@ -35,8 +35,23 @@ class TestMateScanALL(unittest.TestCase):
     def test_is_filename_changed(self):
         self.test.is_filename_changed()
 
+    def test_is_date_match(self):
+        self.test.is_date_match()
+
     def test_bathymetry_availability(self):
         self.test.bathymetry_availability()
+
+    def test_backscatter_availability(self):
+        self.test.backscatter_availability()
+
+    def test_ray_tracing_availability(self):
+        self.test.ray_tracing_availability()
+
+    def test_ellipsoid_height_availability(self):
+        self.test.ellipsoid_height_availability()
+
+    def test_PU_status(self):
+        self.test.PU_status()
 
 
 def suite():

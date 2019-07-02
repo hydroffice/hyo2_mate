@@ -47,13 +47,17 @@ class ScanALL(Scan):
             if datagram_type in ['I', 'i']:
                 datagram.read()
                 p = datagram.installationParameters
-                if 'RFN' in p.keys():
-                    self.scan_result[datagram_type]['other'] = p['RFN']
-            #elif datagram_type in ['D', 'X', 'F', 'f', 'N', 'S', 'Y']:
-            elif datagram_type in ['D', 'X', 'F', 'f', 'N', 'Y']:
+                if self.scan_result[datagram_type]['other'] is None:
+                    self.scan_result[datagram_type]['other'] = p
+            elif not datagram.__class__.__name__ == 'UNKNOWN_RECORD':
                 datagram.read()
-                if 'PingCounter' in datagram.__dict__.keys():
+                if hasattr(datagram, 'PingCounter'):
                     this_count = datagram.PingCounter
+                if hasattr(datagram, 'Counter'):
+                    this_count = datagram.Counter
+                else:
+                    this_count = None
+                if this_count is not None:
                     last_count = self.scan_result[datagram_type]['_seqNo']
                     if last_count is None:
                         last_count = this_count
@@ -77,11 +81,22 @@ class ScanALL(Scan):
         '''
         rfn = None
         rec = self.get_datagram_info('I')
-        if rec is None:
-            rec = self.get_datagram_info('i')
-        if rec is not None:
-            rfn = rec['other']
+        if rec is not None and 'RFN' in rec['other'].keys():
+            rfn = rec['other']['RFN']
         return os.path.basename(self.file_path) != rfn
+
+    def is_date_match(self):
+        '''
+        compare the date as in the datagram I and the date as written
+        in the filename recorded in the datagram I
+        return: True/False
+        '''
+        dt = 'unknown'
+        rec = self.get_datagram_info('I')
+        if rec is not None:
+            if 'RFN' in rec['other'].keys():
+                dt = rec['other']['RFN'].split('_')[1]
+        return dt in os.path.basename(self.file_path)
 
     def bathymetry_availability(self):
         '''
@@ -95,10 +110,71 @@ class ScanALL(Scan):
         part2 = any(i in presence for i in ['D', 'X'])
         part3 = any(i in presence for i in ['F', 'f', 'N'])
         if part1 and part2 and part3:
-            return 'Full'
+            return A_FULL
         partial = any(i in presence
                       for i in ['I', 'R', 'A', 'n', 'P', 'h', 'G', 'U',
                                 'D', 'X', 'F', 'f', 'N'])
         if partial:
-            return 'Partial'
-        return 'None'
+            return A_PARTIAL
+        return A_NONE
+
+    def backscatter_availability(self):
+        '''
+        check the presence of all required datagrams for backscatter processing
+        (I, R, D or X, A, n, P, h, F or f or N, G, U, S or Y)
+        return: 'None'/'Partial'/'Full'
+        '''
+        presence = self.scan_result.keys()
+        result1 = self.bathymetry_availability()
+        part4 = any(i in presence for i in ['S', 'Y'])
+        if result1 == 'Full' and part4:
+            return A_FULL
+        if result1 == 'None' and not part4:
+            return A_NONE
+        return A_PARTIAL
+
+    def ray_tracing_availability(self):
+        '''
+        check the presence of required datagrams for ray tracing
+        (I, R, A, n, P, F or f or N, G, U)
+        return: True/False
+        '''
+        presence = self.scan_result.keys()
+        part0 = all(i in presence for i in ['I', 'R', 'A', 'n', 'P',
+                                            'G', 'U'])
+        part3 = any(i in presence for i in ['F', 'f', 'N'])
+        return part0 and part3
+
+    def ellipsoid_height_availability(self):
+        '''
+        check the presence of the datagrams h and
+        type of nav string in datagram 1 (NMEG GGK)
+        return: True/False
+        '''
+        presence = self.scan_result.keys()
+        check0 = all(i in presence for i in ['1', 'h'])
+        # TODO
+        return False
+
+    def PU_status(self):
+        '''
+        check the status of all sensor in the datagrams 1
+        type of nav string in datagram 1 (NMEG GGK)
+        return: 'Fail'/'Pass'
+        '''
+        rec = self.get_datagram_info('1')
+        # TODO
+        return A_FAIL
+
+    def is_date_match(self):
+        '''
+        compare the date as in the datagram I and the date as written
+        in the filename recorded in the datagram I
+        return: True/False
+        '''
+        dt = 'unknown'
+        rec = self.get_datagram_info('I')
+        if rec is not None:
+            if 'RFN' in rec['other'].keys():
+                dt = rec['other']['RFN'].split('_')[1]
+        return dt in os.path.basename(self.file_path)
