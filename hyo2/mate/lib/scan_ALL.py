@@ -1,5 +1,4 @@
 from hyo2.mate.lib.scan import *
-#from pyall import *
 from datetime import *
 import struct
 

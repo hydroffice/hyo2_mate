@@ -50,7 +50,6 @@ setup(
     ],
     install_requires=[
         "hyo2.abc",
-        "pyall",
     ],
     python_requires='>=3.6',
     entry_points={
