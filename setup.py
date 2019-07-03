@@ -20,7 +20,8 @@ def read(*parts):
 
 def find_version(*file_paths):
     version_file = read(*file_paths)
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M, )
+    version_match = re.search(
+        r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M, )
     if version_match:
         return version_match.group(1)
 
@@ -36,7 +37,8 @@ setup(
     license='Apache2.0',
 
     namespace_packages=["hyo2"],
-    packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests", "*.test*", ]),
+    packages=find_packages(
+        exclude=["*.tests", "*.tests.*", "tests.*", "tests", "*.test*", ]),
     package_data={
         "": [
             'mate/media/*.*',
@@ -61,12 +63,13 @@ setup(
     },
     test_suite="tests",
 
-    description="The Multibeam Acquisition and Tracking Evaluator app and library.",
-    long_description=(read("README.rst") + "\n\n\"\"\"\"\"\"\"\n\n" +
-                      read("HISTORY.rst") + "\n\n\"\"\"\"\"\"\"\n\n" +
-                      read("AUTHORS.rst") + "\n\n\"\"\"\"\"\"\"\n\n" +
-                      read(os.path.join("docs", "developer_guide_how_to_contribute.rst")))
-    ,
+    description=(
+        "The Multibeam Acquisition and Tracking Evaluator app and library."),
+    long_description=(
+        read("README.rst") + "\n\n\"\"\"\"\"\"\"\n\n" +
+        read("HISTORY.rst") + "\n\n\"\"\"\"\"\"\"\n\n" +
+        read("AUTHORS.rst") + "\n\n\"\"\"\"\"\"\"\n\n" +
+        read(os.path.join("docs", "developer_guide_how_to_contribute.rst"))),
     url="https://github.com/hydroffice/hyo2_mate",
     classifiers=[  #
         'Development Status :: 3 - Alpha',
@@ -82,7 +85,10 @@ setup(
         'Topic :: Office/Business :: Office Suites',
     ],
     keywords="hydrography ocean mapping survey raw data",
-    author="Wenjun Wu (Geoscience Australia), Justy Siwabessy (Geoscience Australia), Lachlan Hurst (FrontiersSI), "
-           "Giuseppe Masetti(UNH,CCOM)",
-    author_email="wenjun.wu@ga.gov.au, justy.siwabessy@ga.gov.au, lhurst@frontiersi.com.au, gmasetti@ccom.unh.edu",
+    author=(
+        "Wenjun Wu (Geoscience Australia), Justy Siwabessy (Geoscience "
+        "Australia), Lachlan Hurst (FrontiersSI), Giuseppe Masetti(UNH,CCOM)"),
+    author_email=(
+        "wenjun.wu@ga.gov.au, justy.siwabessy@ga.gov.au, "
+        "lhurst@frontiersi.com.au, gmasetti@ccom.unh.edu"),
 )
