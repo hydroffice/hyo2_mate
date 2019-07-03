@@ -20,3 +20,33 @@ Mate
 * Code: `GitHub repo <https://github.com/hydroffice/hyo2_mate>`_
 * License: Apache 2.0
 
+Installation
+------------
+
+Install unit test dependencies::
+
+    pip install pytest pytest-cov
+
+Install QAX dependencies (QC JSON parsing and validation)::
+
+    pip install --no-deps -e git+https://github.com/hydroffice/hyo2_abc#egg=hyo2.abc
+    pip install -e git+https://github.com/hydroffice/hyo2_qax#egg=hyo2.qax
+
+Command Line Application
+------------------------
+Mate includes a simple command line application. Usage can be displayed as follows::
+
+    %> python hyo2/mate/app/cli.py -h
+
+    usage: cli.py [-h] -qcjson QCJSON
+    optional arguments:
+        -h, --help      show this help message and exit
+        -qcjson QCJSON  Path to QC JSON file
+
+
+Testing
+-------
+
+Unit tests can be run as follows::
+
+    py.test --cov
