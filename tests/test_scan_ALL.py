@@ -3,7 +3,8 @@ import os
 import time
 from hyo2.mate.lib.scan_ALL import ScanALL
 
-TEST_FILE = "0200_MBES_EM122_20150203_010431_Supporter_GA4430.all"
+TEST_FILE1 = "0200_MBES_EM122_20150203_010431_Supporter_GA4430.all"
+TEST_FILE = "0243_P007_MBES_EM122_20150207_044356_Supporter_GA4430.all"
 
 
 class TestMateScanALL(unittest.TestCase):
@@ -20,6 +21,9 @@ class TestMateScanALL(unittest.TestCase):
 
     def test_get_datagram_info(self):
         self.test.get_datagram_info('D')
+
+    def test_get_size_n_pings(self):
+        self.test.get_size_n_pings(2)
 
     def test_pings(self):
         self.test.get_total_pings('f')

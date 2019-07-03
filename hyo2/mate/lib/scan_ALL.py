@@ -1,22 +1,40 @@
 from hyo2.mate.lib.scan import *
-from pyall import *
+#from pyall import *
+from datetime import *
+import struct
 
 
 class ScanALL(Scan):
     '''scan an ALL file and provide some indicators of the contents'''
-    _header_fmt = '=LBBHLLH'
+    _header_fmt = '<LBBHLLHH'
     _header_len = struct.calcsize(_header_fmt)
     _header_unpack = struct.Struct(_header_fmt).unpack_from
-    _file_ptr = None
+    _d1_data_fmt = '<2H6L5bB'
+    _d1_data_len = struct.calcsize(_d1_data_fmt)
+    _d1_data_unpack = struct.Struct(_d1_data_fmt).unpack_from
+    _dh_data_fmt = '<lB'
+    _dh_data_len = struct.calcsize(_dh_data_fmt)
+    _dh_data_unpack = struct.Struct(_dh_data_fmt).unpack_from
 
+    def __init__(self, file_path):
+        Scan.__init__(self, file_path)
+        self.reader = open(self.file_path, 'rb')
+
+    # the source code of _more_data() and _read_header()
+    # are copied from pyall.py
+    def _more_data(self):
+        '''report how many more bytes there are to read from the file'''
+        return self.file_size - self.reader.tell()
+
+    # added 'sequential counter' and 'serial number' as a part of the header
+    # and changed date/time to time-stamp
     # this is to improve the performance
-    # the source code is copied from pyall.py
-    # but added 'sequential counter' as a part of the header
     def _read_header(self):
         '''read the common header for any datagram'''
+        # initialize the reader
         try:
-            curr = self._file_ptr.tell()
-            data = self._file_ptr.read(self._header_len)
+            curr = self.reader.tell()
+            data = self.reader.read(self._header_len)
             s = self._header_unpack(data)
 
             numberOfBytes = s[0]
@@ -26,9 +44,13 @@ class ScanALL(Scan):
             RecordDate = s[4]
             RecordTime = float(s[5]/1000.0)
             Counter = s[6]
+            SerialNumber = s[7]
+            timeStamp = (datetime.strptime(str(RecordDate), '%Y%m%d')
+                         + timedelta(0, RecordTime)
+                         - datetime(1970, 1, 1)).total_seconds()
 
             # now reset file pointer
-            self._file_ptr.seek(curr, 0)
+            self.reader.seek(curr, 0)
 
             # we need to add 4 bytes as the message does not contain
             # the 4 bytes used to hold the size of the message
@@ -38,35 +60,51 @@ class ScanALL(Scan):
                 numberOfBytes = self.file_size - curr - 4
                 typeOfDatagram = 'XXX'
             return (numberOfBytes + 4, STX, typeOfDatagram,
-                    EMModel, RecordDate, RecordTime, Counter, curr)
+                    EMModel, timeStamp, Counter, SerialNumber, curr)
         except struct.error:
             return (0, 0, 0, 0, 0, 0, 0, curr)
+
+    def get_size_n_pings(self, pings):
+        '''
+        return bytes in the file which containg specified
+        number of pings
+        '''
+        c_bytes = 0
+        result = {}
+        self.reader.seek(0, 0)
+        while self._more_data():
+            # read datagram header
+            num_bytes, stx, dg_type, \
+                em_model, unix_time, _counter, serial_number, _curr = \
+                self._read_header()
+            self.reader.seek(_curr + num_bytes, 0)
+            c_bytes += num_bytes
+            if dg_type in ['D', 'X', 'F', 'f', 'N', 'S', 'Y']:
+                if dg_type not in result.keys():
+                    result[dg_type] = {
+                        'seqNo': _counter,
+                        'count': 0,
+                    }
+                if _counter > result[dg_type]['seqNo']:
+                    result[dg_type]['count'] += 1
+                    if result[dg_type]['count'] > pings:
+                        break
+                result[dg_type]['seqNo'] = _counter
+        return c_bytes
 
     def scan_datagram(self):
         '''scan data to extract basic information for each type of datagram'''
 
-        if len(self.scan_result) > 0:   # check if scan is already done
-            return
-
-        # initialize the reader
-        if self.reader is None:
-            self.reader = ALLReader(self.file_path)
-            self._file_ptr = self.reader.fileptr
-        self.reader.rewind()
-
-        while self.reader.moreData():
+        self.scan_result = {}
+        self.reader.seek(0, 0)
+        while self._more_data():
             # update progress
-            self.progress = 1 - self.reader.moreData() // self.file_size
+            self.progress = 1 - self._more_data() // self.file_size
 
             # read datagram header
             num_bytes, stx, dg_type, \
-                em_model, record_date, record_time, _counter, _curr = \
+                em_model, time_stamp, _counter, serial_number, _curr = \
                 self._read_header()
-            time_stamp = to_timestamp(to_DateTime(record_date, record_time))
-
-            # read datagram
-            # dg_type, datagram = self.reader.readDatagram()
-            # datagram_name = self.reader.getDatagramName(dg_type)
 
             if dg_type not in self.scan_result.keys():
                 self.scan_result[dg_type] = copy(self.default_info)
@@ -78,21 +116,28 @@ class ScanALL(Scan):
             if self.scan_result[dg_type]['startTime'] is None:
                 self.scan_result[dg_type]['startTime'] = time_stamp
             self.scan_result[dg_type]['stopTime'] = time_stamp
-            if dg_type in ['I', 'i']:
-                dg_type, datagram = self.reader.readDatagram()
-                datagram.read()
-                p = datagram.installationParameters
+            if dg_type == 'I':
+                self.reader.seek(_curr + self._header_len + 2, 0)
+                ascii_bytes = num_bytes - self._header_len - 2 - 2
+                data = self.reader.read(ascii_bytes)
+                parameters = {}
+                for p in data.decode('utf-8', errors="ignore").split(","):
+                    parts = p.split('=')
+                    if len(parts) > 1:
+                        parameters[parts[0]] = parts[1].strip()
                 if self.scan_result[dg_type]['other'] is None:
-                    self.scan_result[dg_type]['other'] = p
+                    self.scan_result[dg_type]['other'] = parameters
             elif dg_type == '1':
-                _data_fmt = '=3H6L5bB'
-                _data_len = struct.calcsize(_data_fmt)
-                _data_unpack = struct.Struct(_data_fmt).unpack_from
-                self._file_ptr.seek(_curr + self._header_len, 0)
-                data = self._file_ptr.read(_data_len)
-                s = _data_unpack(data)
+                self.reader.seek(_curr + self._header_len, 0)
+                data = self.reader.read(self._d1_data_len)
+                s = self._d1_data_unpack(data)
                 self.scan_result[dg_type]['other'] = s[-5:]
-            elif dg_type in ['D', 'X', 'F', 'f', 'N', 'S', 'Y', 'A']:
+            elif dg_type == 'h':
+                self.reader.seek(_curr + self._header_len, 0)
+                data = self.reader.read(self._dh_data_len)
+                s = self._dh_data_unpack(data)
+                self.scan_result[dg_type]['other'] = s[1]
+            elif dg_type in ['D', 'X', 'F', 'f', 'N', 'S', 'Y']:
                 this_count = _counter
                 last_count = self.scan_result[dg_type]['_seqNo']
                 if last_count is None:
@@ -110,7 +155,7 @@ class ScanALL(Scan):
                 '''
                 self.scan_result[dg_type]['_seqNo'] = \
                     this_count
-            self._file_ptr.seek(_curr + num_bytes, 0)
+            self.reader.seek(_curr + num_bytes, 0)
         return
 
     def is_filename_changed(self):
@@ -133,7 +178,7 @@ class ScanALL(Scan):
         dt = 'unknown'
         rec = self.get_datagram_info('I')
         if rec is not None:
-            dt = time.strftime("%Y%m%d", time.gmtime(rec['startTime']))
+            dt = datetime.utcfromtimestamp(rec['startTime']).strftime('%Y%m%d')
         return dt in os.path.basename(self.file_path)
 
     def bathymetry_availability(self):
@@ -182,7 +227,7 @@ class ScanALL(Scan):
         part3 = any(i in presence for i in ['F', 'f', 'N'])
         return part0 and part3
 
-    def is_missing_pings_tolerable(self):
+    def is_missing_pings_tolerable(self, thresh=1.0):
         '''
         check for the number of missing pings in all multibeam
         data datagrams (D or X, F or f or N, S or Y)
@@ -194,11 +239,11 @@ class ScanALL(Scan):
                 rec = self.scan_result[d_type]
                 if rec['pingCount'] == 0:
                     continue
-                if rec['missedPings'] * 100.0 / rec['pingCount'] > 1.0:
+                if rec['missedPings'] * 100.0 / rec['pingCount'] > thresh:
                     return False
         return True
 
-    def has_minimum_pings(self):
+    def has_minimum_pings(self, thresh=10):
         '''
         check if we have minimum number of requied pings in all multibeam
         data datagrams (D or X, F or f or N, S or Y)
@@ -208,7 +253,7 @@ class ScanALL(Scan):
         for d_type in ['D', 'X', 'F', 'f', 'N', 'S', 'Y']:
             if d_type in self.scan_result.keys():
                 rec = self.scan_result[d_type]
-                if rec['pingCount'] < 10:
+                if rec['pingCount'] < thresh:
                     return False
         return True
 
@@ -218,9 +263,9 @@ class ScanALL(Scan):
         type of nav string in datagram 1 (NMEG GGK)
         return: True/False
         '''
-        presence = self.scan_result.keys()
-        check0 = all(i in presence for i in ['1', 'h'])
-        # TODO
+        rec = self.get_datagram_info('h')
+        if rec is not None:
+            return rec['other'] == 0
         return False
 
     def PU_status(self):

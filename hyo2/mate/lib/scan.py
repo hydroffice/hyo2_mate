@@ -1,5 +1,5 @@
 import os
-import time
+from datetime import datetime
 from copy import *
 
 A_NONE = 'None'
@@ -34,7 +34,8 @@ class Scan:
 
     def _time_str(self, unix_time):
         '''return time string in ISO format'''
-        return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(unix_time))
+        return datetime.utcfromtimestamp(unix_time)\
+            .isoformat(timespec='milliseconds')
 
     def scan_datagram(self):
         '''
