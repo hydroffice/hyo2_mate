@@ -122,7 +122,6 @@ class ScanALL(Scan):
                 data = self.reader.read(2 + ascii_bytes)
                 parameters = {}
                 for p in data[2:].decode('utf-8', errors="ignore").split(","):
-                    print(p)
                     parts = p.split('=')
                     if len(parts) > 1:
                         parameters[parts[0]] = parts[1].strip()
