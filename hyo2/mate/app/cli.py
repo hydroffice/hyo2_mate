@@ -5,7 +5,7 @@ from hyo2.qax.lib.project import QAXProject
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-qcjson", help='Path to QC JSON file')
+    parser.add_argument("-qcjson", help='Path to QC JSON file', required=True)
     args = parser.parse_args()
 
     qcjson_input = args.qcjson
