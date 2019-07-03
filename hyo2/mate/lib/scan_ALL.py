@@ -50,7 +50,7 @@ class ScanALL(Scan):
                          - datetime(1970, 1, 1)).total_seconds()
 
             # now reset file pointer
-            self.reader.seek(curr, 0)
+            # self.reader.seek(curr, 0)
 
             # we need to add 4 bytes as the message does not contain
             # the 4 bytes used to hold the size of the message
@@ -117,23 +117,24 @@ class ScanALL(Scan):
                 self.scan_result[dg_type]['startTime'] = time_stamp
             self.scan_result[dg_type]['stopTime'] = time_stamp
             if dg_type == 'I':
-                self.reader.seek(_curr + self._header_len + 2, 0)
-                ascii_bytes = num_bytes - self._header_len - 2 - 2
-                data = self.reader.read(ascii_bytes)
+                # self.reader.seek(_curr + self._header_len, 0)
+                ascii_bytes = num_bytes - self._header_len - 2
+                data = self.reader.read(2 + ascii_bytes)
                 parameters = {}
-                for p in data.decode('utf-8', errors="ignore").split(","):
+                for p in data[2:].decode('utf-8', errors="ignore").split(","):
+                    print(p)
                     parts = p.split('=')
                     if len(parts) > 1:
                         parameters[parts[0]] = parts[1].strip()
                 if self.scan_result[dg_type]['other'] is None:
                     self.scan_result[dg_type]['other'] = parameters
             elif dg_type == '1':
-                self.reader.seek(_curr + self._header_len, 0)
+                # self.reader.seek(_curr + self._header_len, 0)
                 data = self.reader.read(self._d1_data_len)
                 s = self._d1_data_unpack(data)
                 self.scan_result[dg_type]['other'] = s[-5:]
             elif dg_type == 'h':
-                self.reader.seek(_curr + self._header_len, 0)
+                # self.reader.seek(_curr + self._header_len, 0)
                 data = self.reader.read(self._dh_data_len)
                 s = self._dh_data_unpack(data)
                 self.scan_result[dg_type]['other'] = s[1]
