@@ -1,6 +1,9 @@
-from hyo2.mate.lib.scan import *
+from copy import copy
 from datetime import *
+import os
 import struct
+
+from hyo2.mate.lib.scan import Scan, A_NONE, A_PARTIAL, A_FULL, A_FAIL, A_PASS
 
 
 class ScanALL(Scan):
