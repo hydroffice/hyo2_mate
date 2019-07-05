@@ -6,7 +6,7 @@ class ScanCheck:
     def __init__(self, scan: Scan, params: dict):
         self.scan = scan
         self.params = params
-        self._outputs = {}
+        self._output = {}
 
     @property
     def output(self) -> dict:
@@ -41,7 +41,7 @@ class FilenameChangedCheck(ScanCheck):
         ScanCheck.__init__(self, scan, params)
 
     def run_check(self):
-        filename_changed = scan.is_filename_changed()
+        filename_changed = self.scan.is_filename_changed()
 
         # Currently limited by schema to output a grade. If the filename has
         # changed we'll put it in as 0 (fail), if it hasn't changed then we'll
@@ -61,6 +61,6 @@ class DateChangedCheck(ScanCheck):
         ScanCheck.__init__(self, scan, params)
 
     def run_check(self):
-        date_changed = not can.is_date_match()
+        date_changed = not self.scan.is_date_match()
 
         self._output['grade'] = 0 if date_changed else 100

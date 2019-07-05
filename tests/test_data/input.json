@@ -1,0 +1,53 @@
+{
+  "qa": {
+    "version": "0.1.2",
+    "raw_data": {
+      "checks": [
+        {
+          "info": {
+            "id": "7761e08b-1380-46fa-a7eb-f1f41db38541",
+            "name": "Filename checked",
+            "description": "all filename is consistent with that recorded in file metadata",
+            "version": "1",
+            "group": {
+              "id": "123",
+              "name": "123"
+            }
+          },
+          "inputs": {
+            "files": [
+              {
+                "path": "tests/test_data/0243_P007_MBES_EM122_20150207_044356_Supporter_GA4430.all",
+                "description": "raw data"
+              }
+            ]
+          }
+        },
+        {
+          "info": {
+            "id": "4a3f3371-3a21-44f2-93cf-d9ed19d0c002",
+            "name": "Date checked",
+            "description": "Date included in filename is consistent with that recorded in file metadata",
+            "version": "1",
+            "group": {
+              "id": "123",
+              "name": "123"
+            }
+          },
+          "inputs": {
+            "files": [
+              {
+                "path": "tests/test_data/0243_P007_MBES_EM122_20150207_044356_Supporter_GA4430.all",
+                "description": "raw data"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "survey_products": {
+      "checks": [
+      ]
+    }
+  }
+}

@@ -1,5 +1,7 @@
 import copy
+from datetime import datetime
 import logging
+import os
 
 from hyo2.mate.lib.scan_utils import get_scan, get_check, is_check_supported
 
@@ -29,6 +31,17 @@ class CheckRunner:
         # based on check execution and results. Clone the input to use as the
         # basis of the output.
         self._output = copy.deepcopy(self._input)
+        self._file_checks = None
+
+    @property
+    def output(self) -> dict:
+        """The output of all checks. Will be a clone of the input until checks
+        have been run.
+
+        Returns:
+            Dict that is structured according to the QC JSON schema.
+        """
+        return self._output
 
     def initialize(self):
         """ Performs necessary preprocessing of the input before check
@@ -61,6 +74,85 @@ class CheckRunner:
 
         self._file_checks = filechecks
 
-    def run_checks():
-        # TODO
-        pass
+    def _add_output(self, check_id, filename, output):
+        """ Adds the output to the appropriate location in the _output.
+        """
+        for check in self._output:
+            outputcheckid = check['info']['id']
+
+            # does this check match the check fro which the output was
+            # generated for
+            if check_id != outputcheckid:
+                continue
+
+            # does this check have the file specified that the output was
+            # generated for. There may be duplicate checks, each with different
+            # files, this makes sure we only attach the output to the right
+            # one.
+            inputs = check['inputs']
+            has_file = False
+            for input in inputs['files']:
+                if input['path'] == filename:
+                    has_file = True
+                    break
+
+            if not has_file:
+                continue
+
+            check['outputs'] = output
+            return
+
+        raise RuntimeError("Could not find check {} for file {}".format(
+            check_id, filename
+        ))
+
+    def run_checks(self):
+        """ Excutes all checks on a file-by-file basis
+        """
+        if self._file_checks is None:
+            raise RuntimeError("CheckRunner is not initialized")
+
+        for filename, checklist in self._file_checks.items():
+            _, extension = os.path.splitext(filename)
+            # remove the `.` char from extension
+            filetype = extension[1:]
+
+            # read metadata from header
+            scan = get_scan(filename, filetype)
+            scan.scan_datagram()
+
+            for checkdata in checklist:
+                checkid = checkdata['info']['id']
+                checkversion = checkdata['info']['version']
+
+                checkparams = {}
+                if 'params' in checkdata:
+                    checkparams = checkdata['params']
+
+                checkoutputs = {}
+                checkstatus = None
+                checkerrormessage = None
+                checkstart = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")
+                # get check based on id and version
+                check = get_check(checkid, checkversion, scan, checkparams)
+                try:
+                    check.run_check()
+                    checkstatus = "completed"
+                    # merge two dicts; checkoutputs and check.output
+                    checkoutputs = {**checkoutputs, **check.output}
+                except Exception as e:
+                    checkstatus = "failed"
+                    checkerrormessage = str(e)
+                checkend = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")
+
+                execution = {}
+                execution['start'] = checkstart
+                execution['end'] = checkend
+                execution['status'] = checkstatus
+                if checkerrormessage is not None:
+                    execution['error'] = checkerrormessage
+
+                checkoutputs['execution'] = execution
+                checkoutputs['files'] = [filename]
+
+                self._add_output(checkid, filename, checkoutputs)
