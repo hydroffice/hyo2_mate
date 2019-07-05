@@ -1,5 +1,6 @@
 import unittest
 import os
+import pytest
 import time
 from hyo2.mate.lib.scan_utils import get_scan
 
@@ -21,12 +22,9 @@ class TestMateScan(unittest.TestCase):
         self.assertEqual(type(scan).__name__, 'ScanALL')
 
     def test_get_scan_unsupported(self):
-
-        # following fn should raise a `NotImplementedError` when called
-        def test_fn():
+        with pytest.raises(NotImplementedError):
+            # following fn should raise a `NotImplementedError` when called
             get_scan('doesnotexist.something', 'unsupported_type')
-
-        self.assertRaises(NotImplementedError, test_fn)
 
 
 def suite():

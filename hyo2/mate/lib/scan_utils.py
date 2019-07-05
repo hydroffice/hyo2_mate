@@ -1,5 +1,14 @@
 from hyo2.mate.lib.scan import Scan
+from hyo2.mate.lib.scan_check import ScanCheck, FilenameChangedCheck, \
+    DateChangedCheck
 from hyo2.mate.lib.scan_ALL import ScanALL
+
+
+# List of all check implementations
+all_checks = [
+    FilenameChangedCheck,
+    DateChangedCheck,
+]
 
 
 def get_scan(path: str, file_type: str) -> Scan:
@@ -21,3 +30,48 @@ def get_scan(path: str, file_type: str) -> Scan:
     else:
         raise NotImplementedError(
             "File type {} is not supported".format(file_type))
+
+
+def get_check(
+    id: str, version: str, scan: Scan, params: dict
+) -> ScanCheck:
+    """Factory method to return a new ScanCheck instance for the given id and
+    version.
+
+    Args:
+        id (str): UUID for the check
+        version (str): Version of the check to return
+        scan (Scan): scan object that has parsed the file to be checked
+        params (dict): parameter dict that includes values needed for threshold
+            checks.
+
+    Returns:
+        New `ScanCheck` instance
+
+    Raises:
+        NotImplementedError: if check with `id` and `version` is not found
+    """
+    for check in all_checks:
+        if id == check.id and version == check.version:
+            return check(scan, params)
+
+    raise NotImplementedError(
+        "Check with id {} and version {} could not be found".format(
+            id, version
+        ))
+
+
+def is_check_supported(id: str, version: str) -> bool:
+    """ Indicates if the application supports this type of check.
+
+    Args:
+        id (str): UUID for the check
+        version (str): Version of the check
+
+    Returns:
+        True if the check is supported (eg; it exists), otherwise false.
+    """
+    for check in all_checks:
+        if id == check.id and version == check.version:
+            return True
+    return False
