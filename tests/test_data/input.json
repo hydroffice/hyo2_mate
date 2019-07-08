@@ -42,6 +42,26 @@
               }
             ]
           }
+        },
+        {
+          "info": {
+            "id": "8c909ace-8759-4c2c-b86a-f76f888cd821",
+            "name": "Bathymetry Available",
+            "description": "",
+            "version": "1",
+            "group": {
+              "id": "123",
+              "name": "123"
+            }
+          },
+          "inputs": {
+            "files": [
+              {
+                "path": "tests/test_data/0243_P007_MBES_EM122_20150207_044356_Supporter_GA4430.all",
+                "description": "raw data"
+              }
+            ]
+          }
         }
       ]
     },

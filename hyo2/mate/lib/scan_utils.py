@@ -1,13 +1,14 @@
 from hyo2.mate.lib.scan import Scan
 from hyo2.mate.lib.scan_check import ScanCheck, FilenameChangedCheck, \
-    DateChangedCheck
+    DateChangedCheck, BathymetryAvailableCheck
 from hyo2.mate.lib.scan_ALL import ScanALL
 
 
 # List of all check implementations
 all_checks = [
-    FilenameChangedCheck,
+    BathymetryAvailableCheck,
     DateChangedCheck,
+    FilenameChangedCheck,
 ]
 
 

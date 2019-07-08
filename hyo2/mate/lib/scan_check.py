@@ -1,4 +1,5 @@
 from hyo2.mate.lib.scan import Scan
+from hyo2.mate.lib.scan import A_NONE, A_PARTIAL, A_FULL, A_FAIL, A_PASS
 
 
 class ScanCheck:
@@ -64,3 +65,27 @@ class DateChangedCheck(ScanCheck):
         date_changed = not self.scan.is_date_match()
 
         self._output['percentage'] = 0 if date_changed else 100
+
+
+class BathymetryAvailableCheck(ScanCheck):
+    """Checks bathymetry data is available.
+    """
+    id = '8c909ace-8759-4c2c-b86a-f76f888cd821'
+    name = "Bathymetry Available"
+    version = '1'
+
+    def __init__(self, scan: Scan, params):
+        ScanCheck.__init__(self, scan, params)
+
+    def run_check(self):
+        bathy_avail = self.scan.bathymetry_availability()
+
+        if bathy_avail == A_FULL:
+            self._output['percentage'] = 100
+        elif bathy_avail == A_PARTIAL:
+            self._output['percentage'] = 50
+        elif bathy_avail == A_NONE:
+            self._output['percentage'] = 0
+        else:
+            raise NotImplementedError(
+                "Bathymetry available flag {} is unknown".format(bathy_avail))
