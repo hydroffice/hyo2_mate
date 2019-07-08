@@ -5,7 +5,7 @@ syntax: glob
 *.*~
 .DS_Store
 
-# Byte-compiled / optimized 
+# Byte-compiled / optimized
 __pycache__/
 *.pyc
 *.pyo
@@ -16,6 +16,7 @@ __pycache__/
 .coverage
 .coverage.*
 htmlcov/
+coverage_html_report/
 
 # google drive settings
 *desktop.ini

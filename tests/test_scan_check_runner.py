@@ -7,7 +7,7 @@ import unittest
 from hyo2.mate.lib.check_runner import CheckRunner
 from hyo2.mate.lib.scan_utils import get_scan
 
-qcjson = """
+qajson = """
 [
     {
         "info": {
@@ -64,7 +64,7 @@ qcjson = """
 class TestMateCheckRunner(unittest.TestCase):
 
     def setUp(self):
-        self.checks_json = json.loads(qcjson)
+        self.checks_json = json.loads(qajson)
 
     def test_initialize(self):
         """ Checks if the initialization has grouped the right checks under

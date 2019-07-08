@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class CheckRunner:
     """ The `CheckRunner` coordinates the execution of multiple checks based
-    on a given QC JSON based definition.
+    on a given QA JSON based definition.
 
     This class is strongly aligned towards supporting Scan checks. These checks
     work by first loading the metadata/header, then performing multiple checks
@@ -24,7 +24,7 @@ class CheckRunner:
 
         Args:
             checks_def (dict): definition of checks. This should conform to
-                the checks block of the QC JSON schema.
+                the checks block of the QA JSON schema.
         """
         self._input = checks_def
         # The check runner output will based on its input but add new content
@@ -39,7 +39,7 @@ class CheckRunner:
         have been run.
 
         Returns:
-            Dict that is structured according to the QC JSON schema.
+            Dict that is structured according to the QA JSON schema.
         """
         return self._output
 
@@ -53,7 +53,7 @@ class CheckRunner:
             checkid = check['info']['id']
             checkversion = check['info']['version']
             if not is_check_supported(checkid, checkversion):
-                # It's expected the QC JSON definition could include other
+                # It's expected the QA JSON definition could include other
                 # checks not supported by this application. Ignore these
                 # checks.
                 logger.warning(

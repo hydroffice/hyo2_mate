@@ -15,7 +15,7 @@ class ScanCheck:
         been called.
 
         Returns:
-            Dict that is structured according to the QC JSON schema.
+            Dict that is structured according to the QA JSON schema.
         """
         return self._output
 
