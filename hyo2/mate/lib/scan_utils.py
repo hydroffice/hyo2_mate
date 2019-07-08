@@ -1,6 +1,7 @@
 from hyo2.mate.lib.scan import Scan
 from hyo2.mate.lib.scan_check import ScanCheck, FilenameChangedCheck, \
-    DateChangedCheck, BathymetryAvailableCheck, BackscatterAvailableCheck
+    DateChangedCheck, BathymetryAvailableCheck, BackscatterAvailableCheck, \
+    RayTracingCheck
 from hyo2.mate.lib.scan_ALL import ScanALL
 
 
@@ -10,6 +11,7 @@ all_checks = [
     BathymetryAvailableCheck,
     DateChangedCheck,
     FilenameChangedCheck,
+    RayTracingCheck,
 ]
 
 

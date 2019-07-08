@@ -113,3 +113,22 @@ class BackscatterAvailableCheck(ScanCheck):
         else:
             raise NotImplementedError(
                 "Backscatter available flag {} is unknown".format(bs_avail))
+
+
+class RayTracingCheck(ScanCheck):
+    """Checks Ray Tracing data is available.
+    """
+    id = '5421f3f2-6e37-4740-bf83-488bebde49f4'
+    name = "Ray Tracing Available"
+    version = '1'
+
+    def __init__(self, scan: Scan, params):
+        ScanCheck.__init__(self, scan, params)
+
+    def run_check(self):
+        rt_avail = self.scan.ray_tracing_availability()
+
+        if rt_avail:
+            self._output['percentage'] = 100
+        else:
+            self._output['percentage'] = 0

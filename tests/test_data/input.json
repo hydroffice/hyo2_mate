@@ -82,6 +82,26 @@
               }
             ]
           }
+        },
+        {
+          "info": {
+            "id": "5421f3f2-6e37-4740-bf83-488bebde49f4",
+            "name": "Ray Tracing Available",
+            "description": "",
+            "version": "1",
+            "group": {
+              "id": "123",
+              "name": "123"
+            }
+          },
+          "inputs": {
+            "files": [
+              {
+                "path": "tests/test_data/0243_P007_MBES_EM122_20150207_044356_Supporter_GA4430.all",
+                "description": "raw data"
+              }
+            ]
+          }
         }
       ]
     },
