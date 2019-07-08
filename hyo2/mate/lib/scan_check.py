@@ -132,3 +132,71 @@ class RayTracingCheck(ScanCheck):
             self._output['percentage'] = 100
         else:
             self._output['percentage'] = 0
+
+
+class MinimumPingCheck(ScanCheck):
+    """Checks for minimum number of required pings in all multibeam datagrams.
+    If the params dict includes a `threshold` entry this will be used,
+    otherwise the default of 10 will be applied.
+    """
+    id = 'd762fd79-75bc-4aff-a9d2-e0c36e744e17'
+    name = "Minimum Ping count"
+    version = '1'
+
+    def __init__(self, scan: Scan, params):
+        ScanCheck.__init__(self, scan, params)
+
+    def run_check(self):
+        passed = None
+        if 'threshold' in self.params:
+            min_ping_count = self.params['threshold']
+            passed = self.scan.has_minimum_pings(min_ping_count)
+        else:
+            passed = self.scan.has_minimum_pings()
+
+        if passed:
+            self._output['percentage'] = 100
+        else:
+            self._output['percentage'] = 0
+
+
+class EllipsoidHeightAvailableCheck(ScanCheck):
+    """Checks Ellipsoid Height is available.
+    """
+    id = 'bbce47c0-54c9-4c60-8de8-b174a8905091'
+    name = "Ellipsoid Height Available"
+    version = '1'
+
+    def __init__(self, scan: Scan, params):
+        ScanCheck.__init__(self, scan, params)
+
+    def run_check(self):
+        eh_avail = self.scan.ellipsoid_height_availability()
+
+        if eh_avail:
+            self._output['percentage'] = 100
+        else:
+            self._output['percentage'] = 0
+
+
+class PuStatusCheck(ScanCheck):
+    """Check the status of all sensor in the datagrams 1 type of nav string
+    in datagram 1 (NMEG GGK)
+    """
+    id = '37b967ac-3e82-40f6-ba24-4badcf1317f3'
+    name = "PU Status"
+    version = '1'
+
+    def __init__(self, scan: Scan, params):
+        ScanCheck.__init__(self, scan, params)
+
+    def run_check(self):
+        pu_status = self.scan.PU_status()
+
+        if pu_status == A_PASS:
+            self._output['percentage'] = 100
+        elif pu_status == A_FAIL:
+            self._output['percentage'] = 0
+        else:
+            raise NotImplementedError(
+                "PU Status flag {} is unknown".format(pu_status))
