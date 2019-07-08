@@ -62,6 +62,26 @@
               }
             ]
           }
+        },
+        {
+          "info": {
+            "id": "bbce47c0-54c9-4c60-8de8-b174a8905091",
+            "name": "Backscatter Available",
+            "description": "",
+            "version": "1",
+            "group": {
+              "id": "123",
+              "name": "123"
+            }
+          },
+          "inputs": {
+            "files": [
+              {
+                "path": "tests/test_data/0243_P007_MBES_EM122_20150207_044356_Supporter_GA4430.all",
+                "description": "raw data"
+              }
+            ]
+          }
         }
       ]
     },

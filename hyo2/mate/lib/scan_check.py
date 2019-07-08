@@ -89,3 +89,27 @@ class BathymetryAvailableCheck(ScanCheck):
         else:
             raise NotImplementedError(
                 "Bathymetry available flag {} is unknown".format(bathy_avail))
+
+
+class BackscatterAvailableCheck(ScanCheck):
+    """Checks backscatter data is available.
+    """
+    id = 'bbce47c0-54c9-4c60-8de8-b174a8905091'
+    name = "Backscatter Available"
+    version = '1'
+
+    def __init__(self, scan: Scan, params):
+        ScanCheck.__init__(self, scan, params)
+
+    def run_check(self):
+        bs_avail = self.scan.backscatter_availability()
+
+        if bs_avail == A_FULL:
+            self._output['percentage'] = 100
+        elif bs_avail == A_PARTIAL:
+            self._output['percentage'] = 50
+        elif bs_avail == A_NONE:
+            self._output['percentage'] = 0
+        else:
+            raise NotImplementedError(
+                "Backscatter available flag {} is unknown".format(bs_avail))
