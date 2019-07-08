@@ -43,10 +43,10 @@ class FilenameChangedCheck(ScanCheck):
     def run_check(self):
         filename_changed = self.scan.is_filename_changed()
 
-        # Currently limited by schema to output a grade. If the filename has
+        # Currently limited by schema to output a percent. If the filename has
         # changed we'll put it in as 0 (fail), if it hasn't changed then we'll
-        # say it's grade 100
-        self._output['grade'] = 0 if filename_changed else 100
+        # say it's 100%
+        self._output['percentage'] = 0 if filename_changed else 100
 
 
 class DateChangedCheck(ScanCheck):
@@ -63,4 +63,4 @@ class DateChangedCheck(ScanCheck):
     def run_check(self):
         date_changed = not self.scan.is_date_match()
 
-        self._output['grade'] = 0 if date_changed else 100
+        self._output['percentage'] = 0 if date_changed else 100
