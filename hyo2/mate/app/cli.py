@@ -41,10 +41,12 @@ def main():
 
     output['qa']['raw_data']['checks'] = checkrunner.output
     if args.output is None:
+        # If output not specified p[rint to std out
         print(json.dumps(output, indent=4))
     else:
-        # todo
-        raise NotImplementedError("Todo; save to file")
+        qajson_output = args.output
+        with open(qajson_output, 'w') as jsonfileoutput:
+            jsonfileoutput.write(json.dumps(output, indent=4))
 
 
 if __name__ == '__main__':
