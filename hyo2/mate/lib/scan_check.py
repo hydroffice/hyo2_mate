@@ -1,10 +1,16 @@
+from typing import List
+
 from hyo2.mate.lib.scan import Scan
 from hyo2.mate.lib.scan import A_NONE, A_PARTIAL, A_FULL, A_FAIL, A_PASS
+from hyo2.qax.lib.qa_json import QaJsonParam
 
 
 class ScanCheck:
+    # list including default params to be used for the check
+    # objects included in list will have a `name` and `value` attribute
+    default_params = []
 
-    def __init__(self, scan: Scan, params: dict):
+    def __init__(self, scan: Scan, params: List[QaJsonParam]):
         self.scan = scan
         self.params = params
         self._output = {}
@@ -18,6 +24,13 @@ class ScanCheck:
             Dict that is structured according to the QA JSON schema.
         """
         return self._output
+
+    def get_param(self, name: str) -> QaJsonParam:
+        """ Gets a parameter based on the given name. Will return None if
+        parameter does not exist.
+        """
+        match = next((p for p in self.params if p.name == name), None)
+        return match
 
     def run_check(self):
         """Executes the check. Specific logic is implemented in the child/
@@ -142,15 +155,18 @@ class MinimumPingCheck(ScanCheck):
     id = 'd762fd79-75bc-4aff-a9d2-e0c36e744e17'
     name = "Minimum Ping count"
     version = '1'
+    default_params = [
+        QaJsonParam(name='threshold', value=20)
+    ]
 
     def __init__(self, scan: Scan, params):
         ScanCheck.__init__(self, scan, params)
 
     def run_check(self):
         passed = None
-        if 'threshold' in self.params:
-            min_ping_count = self.params['threshold']
-            passed = self.scan.has_minimum_pings(min_ping_count)
+        threshold_param = self.get_param('threshold')
+        if threshold_param is not None:
+            passed = self.scan.has_minimum_pings(threshold_param.value)
         else:
             passed = self.scan.has_minimum_pings()
 
