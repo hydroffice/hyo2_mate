@@ -63,8 +63,8 @@ class MateQaxPlugin(QaxCheckToolPlugin):
         # to_dict function to generate it.
         rawdatachecks = qajson.qa.raw_data.to_dict()['checks']
 
-        check_runner = CheckRunner(rawdatachecks)
-        check_runner.initialize()
+        self.check_runner = CheckRunner(rawdatachecks)
+        self.check_runner.initialize()
 
         # the check_runner callback accepts only a float, whereas the qax
         # qwax plugin check tool callback requires a referece to a check tool
@@ -72,9 +72,11 @@ class MateQaxPlugin(QaxCheckToolPlugin):
         def pg_call(check_runner_progress):
             progress_callback(self, check_runner_progress)
 
-        check_runner.run_checks(pg_call)
+        self.check_runner.run_checks(pg_call)
 
         # todo: get output from checks and update qajson object
 
     def stop(self):
         self.stopped = True
+        if self.check_runner is not None:
+            self.check_runner.stop()

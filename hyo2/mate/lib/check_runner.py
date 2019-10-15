@@ -34,6 +34,8 @@ class CheckRunner:
         self._output = copy.deepcopy(self._input)
         self._file_checks = None
 
+        self.stopped = False  # if true check runner should stop execution
+
     @property
     def output(self) -> dict:
         """The output of all checks. Will be a clone of the input until checks
@@ -107,6 +109,13 @@ class CheckRunner:
             check_id, filename
         ))
 
+    def stop(self):
+        """ Stop execution of the check runner. Currently this will only stop
+        execution are a file has been fully read. There may be a delay between
+        calling this and execution being stopped.
+        """
+        self.stopped = True
+
     def run_checks(self, progress_callback: Callable = None):
         """ Excutes all checks on a file-by-file basis
 
@@ -114,6 +123,8 @@ class CheckRunner:
             a float between the value of 0.0 and 1.0 to indicate progress
             of the checks. Optional.
         """
+        self.stopped = False
+
         if self._file_checks is None:
             raise RuntimeError("CheckRunner is not initialized")
 
@@ -124,6 +135,8 @@ class CheckRunner:
             total_file_size += os.path.getsize(filename)
 
         for filename, checklist in self._file_checks.items():
+            if self.stopped:
+                return
             file_size = os.path.getsize(filename)
             file_size_fraction = file_size / total_file_size
             _, extension = os.path.splitext(filename)
