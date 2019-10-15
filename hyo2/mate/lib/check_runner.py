@@ -2,6 +2,7 @@ import copy
 from datetime import datetime
 import logging
 import os
+from typing import Callable
 
 from hyo2.mate.lib.scan_utils import get_scan, get_check, is_check_supported
 
@@ -58,7 +59,7 @@ class CheckRunner:
                 # checks.
                 logger.warning(
                     "Check {} was ignored as it is not supported"
-                    .format(check['id']))
+                    .format(check['info']['id']))
                 continue
             inputs = check['inputs']
             for input in inputs['files']:
@@ -106,20 +107,40 @@ class CheckRunner:
             check_id, filename
         ))
 
-    def run_checks(self):
+    def run_checks(self, progress_callback: Callable = None):
         """ Excutes all checks on a file-by-file basis
+
+        :param progress_callback Callable: function reference that is passed
+            a float between the value of 0.0 and 1.0 to indicate progress
+            of the checks. Optional.
         """
         if self._file_checks is None:
             raise RuntimeError("CheckRunner is not initialized")
 
+        # to support accurate progress reporting get size of all files
+        total_file_size = 0
+        processed_files_size = 0
         for filename, checklist in self._file_checks.items():
+            total_file_size += os.path.getsize(filename)
+
+        for filename, checklist in self._file_checks.items():
+            file_size = os.path.getsize(filename)
+            file_size_fraction = file_size / total_file_size
             _, extension = os.path.splitext(filename)
             # remove the `.` char from extension
             filetype = extension[1:]
 
             # read metadata from header
             scan = get_scan(filename, filetype)
-            scan.scan_datagram()
+
+            def prog_cb(scan_progress):
+                p = scan_progress * file_size + processed_files_size
+                if progress_callback is not None:
+                    progress_callback(p / total_file_size)
+
+            scan.scan_datagram(prog_cb)
+
+            processed_files_size += file_size
 
             for checkdata in checklist:
                 checkid = checkdata['info']['id']

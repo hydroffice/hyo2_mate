@@ -94,14 +94,16 @@ class ScanALL(Scan):
                 result[dg_type]['seqNo'] = _counter
         return c_bytes
 
-    def scan_datagram(self):
+    def scan_datagram(self, progress_callback=None):
         '''scan data to extract basic information for each type of datagram'''
 
         self.scan_result = {}
         self.reader.seek(0, 0)
         while self._more_data():
             # update progress
-            self.progress = 1 - self._more_data() // self.file_size
+            self.progress = 1.0 - (self._more_data() / self.file_size)
+            if progress_callback is not None:
+                progress_callback(self.progress)
 
             # read datagram header
             num_bytes, stx, dg_type, \
