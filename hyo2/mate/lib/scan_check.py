@@ -2,7 +2,7 @@ from typing import List
 
 from hyo2.mate.lib.scan import Scan
 from hyo2.mate.lib.scan import A_NONE, A_PARTIAL, A_FULL, A_FAIL, A_PASS
-from hyo2.qax.lib.qa_json import QaJsonParam
+from hyo2.qax.lib.qa_json import QaJsonParam, QaJsonOutputs
 
 
 class ScanCheck:
@@ -13,10 +13,10 @@ class ScanCheck:
     def __init__(self, scan: Scan, params: List[QaJsonParam]):
         self.scan = scan
         self.params = params
-        self._output = {}
+        self._output = None  # QaJsonOutputs
 
     @property
-    def output(self) -> dict:
+    def output(self) -> QaJsonOutputs:
         """The output of the check. Will be empty until after `run_check` has
         been called.
 
@@ -57,10 +57,22 @@ class FilenameChangedCheck(ScanCheck):
     def run_check(self):
         filename_changed = self.scan.is_filename_changed()
 
-        # Currently limited by schema to output a percent. If the filename has
-        # changed we'll put it in as 0 (fail), if it hasn't changed then we'll
-        # say it's 100%
-        self._output['percentage'] = 0 if filename_changed else 100
+        msg = (
+            "Filename does not match name embedded within file contents"
+            if filename_changed
+            else None
+        )
+
+        qa_pass = "no" if filename_changed else "yes"
+
+        self._output = QaJsonOutputs(
+            execution=None,
+            files=None,
+            count=None,
+            percentage=None,
+            message=msg,
+            qa_pass=qa_pass
+        )
 
 
 class DateChangedCheck(ScanCheck):
@@ -77,7 +89,22 @@ class DateChangedCheck(ScanCheck):
     def run_check(self):
         date_changed = not self.scan.is_date_match()
 
-        self._output['percentage'] = 0 if date_changed else 100
+        msg = (
+            "File date does not match date embedded within file contents"
+            if date_changed
+            else None
+        )
+
+        qa_pass = "no" if date_changed else "yes"
+
+        self._output = QaJsonOutputs(
+            execution=None,
+            files=None,
+            count=None,
+            percentage=None,
+            message=msg,
+            qa_pass=qa_pass
+        )
 
 
 class BathymetryAvailableCheck(ScanCheck):
@@ -93,15 +120,29 @@ class BathymetryAvailableCheck(ScanCheck):
     def run_check(self):
         bathy_avail = self.scan.bathymetry_availability()
 
+        qa_pass = None
+        msg = None
         if bathy_avail == A_FULL:
-            self._output['percentage'] = 100
+            qa_pass = "yes"
+            msg = None
         elif bathy_avail == A_PARTIAL:
-            self._output['percentage'] = 50
+            qa_pass = "no"
+            msg = "Only partial bathymetry is available"
         elif bathy_avail == A_NONE:
-            self._output['percentage'] = 0
+            qa_pass = "no"
+            msg = "No bathymetry is available"
         else:
-            raise NotImplementedError(
-                "Bathymetry available flag {} is unknown".format(bathy_avail))
+            qa_pass = "no"
+            msg = "Bathymetry available flag {} is unknown".format(bathy_avail)
+
+        self._output = QaJsonOutputs(
+            execution=None,
+            files=None,
+            count=None,
+            percentage=None,
+            message=msg,
+            qa_pass=qa_pass
+        )
 
 
 class BackscatterAvailableCheck(ScanCheck):
@@ -117,15 +158,29 @@ class BackscatterAvailableCheck(ScanCheck):
     def run_check(self):
         bs_avail = self.scan.backscatter_availability()
 
+        qa_pass = None
+        msg = None
         if bs_avail == A_FULL:
-            self._output['percentage'] = 100
+            qa_pass = "yes"
+            msg = None
         elif bs_avail == A_PARTIAL:
-            self._output['percentage'] = 50
+            qa_pass = "no"
+            msg = "Backscatter available"
         elif bs_avail == A_NONE:
-            self._output['percentage'] = 0
+            qa_pass = "no"
+            msg = "Backscatter available"
         else:
-            raise NotImplementedError(
-                "Backscatter available flag {} is unknown".format(bs_avail))
+            qa_pass = "no"
+            msg = "Backscatter available flag {} is unknown".format(bs_avail)
+
+        self._output = QaJsonOutputs(
+            execution=None,
+            files=None,
+            count=None,
+            percentage=None,
+            message=msg,
+            qa_pass=qa_pass
+        )
 
 
 class RayTracingCheck(ScanCheck):
@@ -141,15 +196,27 @@ class RayTracingCheck(ScanCheck):
     def run_check(self):
         rt_avail = self.scan.ray_tracing_availability()
 
-        if rt_avail:
-            self._output['percentage'] = 100
-        else:
-            self._output['percentage'] = 0
+        msg = (
+            None
+            if rt_avail
+            else "Ray tracing is not available"
+        )
+
+        qa_pass = "yes" if rt_avail else "no"
+
+        self._output = QaJsonOutputs(
+            execution=None,
+            files=None,
+            count=None,
+            percentage=None,
+            message=msg,
+            qa_pass=qa_pass
+        )
 
 
 class MinimumPingCheck(ScanCheck):
     """Checks for minimum number of required pings in all multibeam datagrams.
-    If the params dict includes a `threshold` entry this will be used,
+    If the params list includes a `threshold` entry this will be used,
     otherwise the default of 10 will be applied.
     """
     id = 'd762fd79-75bc-4aff-a9d2-e0c36e744e17'
@@ -170,10 +237,28 @@ class MinimumPingCheck(ScanCheck):
         else:
             passed = self.scan.has_minimum_pings()
 
-        if passed:
-            self._output['percentage'] = 100
-        else:
-            self._output['percentage'] = 0
+        msg = (
+            None
+            if passed
+            else (
+                "Minimum ping count is less than threshold count of 10"
+                if threshold_param is None
+                else (
+                    "Minimum ping count is less than threshold count of {}"
+                    .format(threshold_param.value))
+            )
+        )
+
+        qa_pass = "yes" if passed else "no"
+
+        self._output = QaJsonOutputs(
+            execution=None,
+            files=None,
+            count=None,
+            percentage=None,
+            message=msg,
+            qa_pass=qa_pass
+        )
 
 
 class EllipsoidHeightAvailableCheck(ScanCheck):
@@ -189,10 +274,22 @@ class EllipsoidHeightAvailableCheck(ScanCheck):
     def run_check(self):
         eh_avail = self.scan.ellipsoid_height_availability()
 
-        if eh_avail:
-            self._output['percentage'] = 100
-        else:
-            self._output['percentage'] = 0
+        msg = (
+            None
+            if rt_avail
+            else "Ellipsoid height is not available"
+        )
+
+        qa_pass = "yes" if eh_avail else "no"
+
+        self._output = QaJsonOutputs(
+            execution=None,
+            files=None,
+            count=None,
+            percentage=None,
+            message=msg,
+            qa_pass=qa_pass
+        )
 
 
 class PuStatusCheck(ScanCheck):
@@ -209,10 +306,23 @@ class PuStatusCheck(ScanCheck):
     def run_check(self):
         pu_status = self.scan.PU_status()
 
+        msg = None
+        qa_pass = None
         if pu_status == A_PASS:
-            self._output['percentage'] = 100
+            qa_pass = "yes"
+            msg = None
         elif pu_status == A_FAIL:
-            self._output['percentage'] = 0
+            qa_pass = "no"
+            msg = None
         else:
-            raise NotImplementedError(
-                "PU Status flag {} is unknown".format(pu_status))
+            qa_pass = "no"
+            msg = "PU Status flag {} is unknown".format(pu_status)
+
+        self._output = QaJsonOutputs(
+            execution=None,
+            files=None,
+            count=None,
+            percentage=None,
+            message=msg,
+            qa_pass=qa_pass
+        )

@@ -41,7 +41,7 @@ def get_scan(path: str, file_type: str) -> Scan:
 
 
 def get_check(
-    id: str, version: str, scan: Scan, params: dict
+    id: str, version: str, scan: Scan, params: list
 ) -> ScanCheck:
     """Factory method to return a new ScanCheck instance for the given id and
     version.
@@ -50,7 +50,7 @@ def get_check(
         id (str): UUID for the check
         version (str): Version of the check to return
         scan (Scan): scan object that has parsed the file to be checked
-        params (dict): parameter dict that includes values needed for threshold
+        params (list): list of parameters that includes values needed for
             checks.
 
     Returns:

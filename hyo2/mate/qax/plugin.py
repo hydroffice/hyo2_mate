@@ -4,7 +4,7 @@ from hyo2.mate.lib.scan_utils import all_checks
 from hyo2.mate.lib.check_runner import CheckRunner
 from hyo2.qax.lib.plugin import QaxCheckToolPlugin, QaxCheckReference, \
     QaxFileType
-from hyo2.qax.lib.qa_json import QaJsonRoot
+from hyo2.qax.lib.qa_json import QaJsonRoot, QaJsonDataLevel
 
 
 class MateQaxPlugin(QaxCheckToolPlugin):
@@ -74,7 +74,44 @@ class MateQaxPlugin(QaxCheckToolPlugin):
 
         self.check_runner.run_checks(pg_call)
 
-        # todo: get output from checks and update qajson object
+        # the checks runner produces an array containing a listof checks
+        # each check being a dictionary. Deserialise these using the qa json
+        # datalevel class
+        out_dl = QaJsonDataLevel.from_dict(
+            {'checks': self.check_runner.output})
+
+        # now loop through all raw_data (Mate only does raw data) checks in
+        # the qsjson and update the right checks with the check runner output
+        for out_check in out_dl.checks:
+            # find the check definition in the input qajson.
+            # note: both check and id must match. The same check implmenetation
+            # may be include twice but with diffferent names (this is
+            # supported)
+            in_check = next(
+                (
+                    c
+                    for c in qajson.qa.raw_data.checks
+                    if (
+                        c.info.id == out_check.info.id and
+                        c.info.name == out_check.info.name)
+                ),
+                None
+            )
+            if in_check is None:
+                # this would indicate a check was run that was not included
+                # in the input qajson. *Should never occur*
+                raise RuntimeError(
+                    "Check {} ({}) found in output that was not "
+                    "present in input"
+                    .format(out_check.info.name, out_check.info.id))
+            # replace the input qajson check outputs with the output generated
+            # by the check_runner
+            in_check.outputs = out_check.outputs
+
+        import json
+        print(json.dumps(
+            qajson.to_dict(), sort_keys=True, indent=4,
+            separators=(',', ': ')))
 
     def stop(self):
         self.stopped = True

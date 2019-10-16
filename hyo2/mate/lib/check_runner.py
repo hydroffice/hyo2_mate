@@ -4,6 +4,9 @@ import logging
 import os
 from typing import Callable
 
+from hyo2.qax.lib.qa_json import QaJsonParam, QaJsonOutputs, QaJsonExecution, \
+    QaJsonInputs
+
 from hyo2.mate.lib.scan_utils import get_scan, get_check, is_check_supported
 
 logger = logging.getLogger(__name__)
@@ -102,7 +105,7 @@ class CheckRunner:
             if not has_file:
                 continue
 
-            check['outputs'] = output
+            check['outputs'] = output.to_dict()
             return
 
         raise RuntimeError("Could not find check {} for file {}".format(
@@ -159,11 +162,12 @@ class CheckRunner:
                 checkid = checkdata['info']['id']
                 checkversion = checkdata['info']['version']
 
-                checkparams = {}
-                if 'params' in checkdata:
-                    checkparams = checkdata['params']
+                checkparams = []
+                if 'params' in checkdata['inputs']:
+                    checkparams = (
+                        QaJsonInputs.from_dict(checkdata['inputs']).params)
 
-                checkoutputs = {}
+                checkoutputs = QaJsonOutputs()
                 checkstatus = None
                 checkerrormessage = None
                 checkstart = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")
@@ -173,7 +177,7 @@ class CheckRunner:
                     check.run_check()
                     checkstatus = "completed"
                     # merge two dicts; checkoutputs and check.output
-                    checkoutputs = {**checkoutputs, **check.output}
+                    checkoutputs = check.output
                 except Exception as e:
                     checkstatus = "failed"
                     checkerrormessage = str(e)
@@ -186,6 +190,6 @@ class CheckRunner:
                 if checkerrormessage is not None:
                     execution['error'] = checkerrormessage
 
-                checkoutputs['execution'] = execution
+                checkoutputs.execution = QaJsonExecution.from_dict(execution)
 
                 self._add_output(checkid, filename, checkoutputs)
