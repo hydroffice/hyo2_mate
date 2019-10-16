@@ -187,8 +187,5 @@ class CheckRunner:
                     execution['error'] = checkerrormessage
 
                 checkoutputs['execution'] = execution
-                file = {}
-                file['path'] = filename
-                checkoutputs['files'] = [file]
 
                 self._add_output(checkid, filename, checkoutputs)
