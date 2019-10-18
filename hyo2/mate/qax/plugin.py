@@ -108,11 +108,6 @@ class MateQaxPlugin(QaxCheckToolPlugin):
             # by the check_runner
             in_check.outputs = out_check.outputs
 
-        import json
-        print(json.dumps(
-            qajson.to_dict(), sort_keys=True, indent=4,
-            separators=(',', ': ')))
-
     def stop(self):
         self.stopped = True
         if self.check_runner is not None:
