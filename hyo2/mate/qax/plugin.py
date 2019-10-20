@@ -1,10 +1,12 @@
 from typing import List, Dict, NoReturn, Callable
+from pathlib import Path
 
 from hyo2.mate.lib.scan_utils import all_checks
 from hyo2.mate.lib.check_runner import CheckRunner
 from hyo2.qax.lib.plugin import QaxCheckToolPlugin, QaxCheckReference, \
     QaxFileType
-from hyo2.qax.lib.qa_json import QaJsonRoot, QaJsonDataLevel
+from hyo2.qax.lib.qa_json import QaJsonRoot, QaJsonDataLevel, QaJsonCheck, \
+    QaJsonFile, QaJsonInputs
 
 
 class MateQaxPlugin(QaxCheckToolPlugin):
@@ -52,6 +54,15 @@ class MateQaxPlugin(QaxCheckToolPlugin):
     def checks(self) -> List[QaxCheckReference]:
         return self._check_references
 
+    def __check_files_match(self, a: QaJsonInputs, b: QaJsonInputs) -> bool:
+        """ Checks if the input files in a are the same as b. This is used
+        to match the plugin's output with the QAJSON outputs that must be
+        updated with the check results.
+        """
+        set_a = set([str(p.path) for p in a.files])
+        set_b = set([str(p.path) for p in b.files])
+        return set_a == set_b
+
     def run(
             self,
             qajson: QaJsonRoot,
@@ -93,7 +104,8 @@ class MateQaxPlugin(QaxCheckToolPlugin):
                     for c in qajson.qa.raw_data.checks
                     if (
                         c.info.id == out_check.info.id and
-                        c.info.name == out_check.info.name)
+                        c.info.name == out_check.info.name and
+                        self.__check_files_match(c.inputs, out_check.inputs))
                 ),
                 None
             )
@@ -112,3 +124,49 @@ class MateQaxPlugin(QaxCheckToolPlugin):
         self.stopped = True
         if self.check_runner is not None:
             self.check_runner.stop()
+
+    def update_qa_json_input_files(
+            self, qa_json: QaJsonRoot, files: List[Path]) -> NoReturn:
+        """ Updates qa_json to support the list of provided files. function
+        defined in base class has been overwritten to support some Mate
+        specifics in the way it supports multiple files.
+        """
+        # when this function has been called qa_json has been updated to
+        # include the list of checks. While Mate will support processing of
+        # multiple files within one QA JSON check definition, the QA JSON
+        # schema doesn't support multiple outputs per check. To work around
+        # this, this function take the specified checks, and adds one check
+        # definition per file. Each Mate check is therefore run with a single
+        # input file, but the same check is duplicated for each file passed in
+        all_data_levels = [check_ref.data_level for check_ref in self.checks()]
+        all_data_levels = list(set(all_data_levels))
+
+        # build a list of mate checks in the qa_json for all the different data
+        # levels (this really only needs to check the raw_data data level)
+        all_mate_checks = []
+        for dl in all_data_levels:
+            dl_sp = getattr(qa_json.qa, dl)
+            if dl_sp is None:
+                continue
+            for check in dl_sp.checks:
+                if self.get_check_reference(check.info.id) is not None:
+                    all_mate_checks.append(check)
+
+        # now remove the current Mate definitions as we'll add these all back
+        # in again for each input file.
+        for mate_check in all_mate_checks:
+            for dl in all_data_levels:
+                dl_sp = getattr(qa_json.qa, dl)
+                dl_sp.checks.remove(mate_check)
+
+        for input_file in files:
+            for mate_check in all_mate_checks:
+                check_ref = self.get_check_reference(mate_check.info.id)
+                if not check_ref.supports_file(input_file):
+                    continue
+                mate_check_clone = QaJsonCheck.from_dict(mate_check.to_dict())
+                inputs = mate_check_clone.get_or_add_inputs()
+                inputs.files.append(
+                    QaJsonFile(path=str(input_file), description=None))
+                # ** ASSUME ** mate checks only go in the raw_data data level
+                qa_json.qa.raw_data.checks.append(mate_check_clone)
