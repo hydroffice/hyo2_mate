@@ -192,8 +192,7 @@ class ScanALL(Scan):
         return: 'None'/'Partial'/'Full'
         '''
         presence = self.scan_result.keys()
-        part1 = all(i in presence for i in ['I', 'R', 'A', 'n', 'P', 'h',
-                                            'G', 'U'])
+        part1 = all(i in presence for i in ['I', 'R', 'A', 'n', 'P', 'G', 'U'])
         part2 = any(i in presence for i in ['D', 'X'])
         part3 = any(i in presence for i in ['F', 'f', 'N'])
         if part1 and part2 and part3:
