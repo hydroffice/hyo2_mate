@@ -49,7 +49,7 @@ install:
 
 build: off
 build_script:
-  - pip install .
+  - pip install --no-deps .
   # - conda remove --force PyQt Qt sip
   - del /q %MINICONDA%\envs\test-environment\qt.conf
   - conda list --show-channel-urls
