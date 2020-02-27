@@ -11,7 +11,7 @@ class ScanALL(Scan):
     _header_fmt = '<LBBHLLHH'
     _header_len = struct.calcsize(_header_fmt)
     _header_unpack = struct.Struct(_header_fmt).unpack_from
-    _d1_data_fmt = '<2H6L5bB'
+    _d1_data_fmt = '<2H6L5bBH3h'
     _d1_data_len = struct.calcsize(_d1_data_fmt)
     _d1_data_unpack = struct.Struct(_d1_data_fmt).unpack_from
     _dh_data_fmt = '<lB'
@@ -162,6 +162,27 @@ class ScanALL(Scan):
             self.reader.seek(_curr + num_bytes, 0)
         return
 
+    def get_datagram_format_version(self):
+        '''
+        gets the version of the datagram format used by this file
+        '''
+        rec = self.get_datagram_info('I')
+        dsv = None
+        if rec is not None and 'DSV' in rec['other'].keys():
+            dsv = rec['other']['DSV']
+        return dsv
+
+    def get_multicast_sensor_identifier(self):
+        '''
+        Multicast sensor identifier defines the sensor list that may be
+        referenced by the 'PU Status' 'Sensor input status' ports
+        '''
+        rec = self.get_datagram_info('I')
+        MCIn = None
+        if rec is not None and 'MCIn' in rec['other'].keys():
+            MCIn = rec['other']['MCIn']
+        return MCIn
+
     def is_filename_changed(self):
         '''
         check if the filename is different from what recorded
@@ -266,6 +287,12 @@ class ScanALL(Scan):
         type of nav string in datagram 1 (NMEG GGK)
         return: True/False
         '''
+
+        # this needs to not just check h
+        # ot needs to look at pu status as below (PU_status)
+        #    look at port 1
+        #    needs to be 0x00000011
+
         rec = self.get_datagram_info('h')
         if rec is not None:
             return rec['other'] == 0
