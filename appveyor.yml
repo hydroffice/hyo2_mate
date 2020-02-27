@@ -37,13 +37,13 @@ install:
 
   - pip install pytest pytest-cov
   - pip install coveralls
-  - pip install PySide2
   # for hyo2.abc
-  - conda install numpy matplotlib-base gdal pyproj appdirs bidict coverage psutil
+  - conda install numpy matplotlib-base pyproj appdirs bidict coverage psutil
   # for hyo2.soundspeed
   - conda install cython
   # --no-deps because of pip not detecting the installed GDAL
   - pip install https://github.com/hydroffice/hyo2_abc/archive/master.zip
+  - pip install https://github.com/ausseabed/hyo2_qax/archive/master.zip
 
 build: off
 build_script:
