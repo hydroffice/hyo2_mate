@@ -1,3 +1,6 @@
+.. note::
+   This repo is **DEPRECATED**. Go to the `new Mate repo <https://github.com/ausseabed/mate>`_.
+
 Mate
 ====
 
